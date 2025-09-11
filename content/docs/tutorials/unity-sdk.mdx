@@ -1,0 +1,289 @@
+---
+title: Unity SDK Guide
+description: Complete guide for integrating PlaySuper into your Unity games
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# 🎮 Unity SDK Guide
+
+Complete guide for integrating PlaySuper rewards into your Unity games.
+
+## Installation
+
+### Step 1: Install GPM
+
+The PlaySuper Unity SDK relies on the GPM package which is available Unity Asset Store. Therefore, you must install and set up GPM before installing PlaySuper's Unity SDK. Follow these steps:
+
+1. Click on **Add to My Assets** on the [GPM asset page](https://assetstore.unity.com/packages/tools/utilities/game-package-manager-147711). This will link the package to your Unity account.
+
+2. In your Unity Project, go to **Window > Package Manager** and click on **My Assets** in the dropdown menu at the top of the window.
+
+3. Select **Game Package Manager** from the list of available assets, and click **Import**.
+
+4. After importing GPM, navigate to **Tools > GPM > Manager**. In the left panel, select **WebView** and click **Install**.
+
+### Step 2: Install PlaySuper's Unity SDK
+
+<Callout type="info">
+There are two ways to install the PlaySuper's Unity SDK:
+- From GitHub
+- From OpenUPM (Open Unity Package Manager)
+
+Note: For development/testing, you can grab our dev build from: [v1.2.2](https://github.com/PlaySuper/unity-sdk-public/releases/tag/v1.2.2)
+</Callout>
+
+#### Option A: OpenUPM-CLI
+
+If you have the [OpenUPM CLI](https://github.com/openupm/openupm-cli#installation) installed, you can install the OpenUPM registry with the following command:
+
+```bash
+openupm add com.playsuper.unity-sdk
+```
+
+#### Option B: Import from GitHub
+
+1. Download and extract the latest **Source Code** release from [unity-sdk github](https://github.com/PlaySuper/unity-sdk-public/releases/tag/v1.0.0).
+
+2. Navigate to **Window > Package Manager** in your Unity Project.
+
+3. Click on the plus icon in the navigation bar at the top, and choose **Add Package from Disk**. This will open a file navigation dialog.
+
+4. Navigate to the extracted unity-sdk-public folder, which was downloaded from Github in step 1. Select the `package.json` file to import the Unity SDK package.
+
+## Setup
+
+### Unity 6 Compatibility Notes
+
+<Callout type="warning">
+Special considerations for Unity 6 compatibility - check the expandable section in the original documentation.
+</Callout>
+
+### Android Configuration
+
+1. Open **File > Build Settings** and make sure the Unity project is configured for Android. If you don't see Android selected, follow the below steps:
+   - Click on Android to select it, in the left panel
+   - Click on the **Switch Platform** button at the bottom right corner of the window. This will change the platform configuration of your Unity project to Android.
+
+2. Open **Edit > Project Settings** in your Unity project
+
+3. Under Player, navigate to publisher settings for Android
+
+4. Tick the **Custom Main Gradle Template** and **Custom Gradle Properties Template** options. This will create two files inside Assets/Plugins/Android
+
+5. Open the `Assets/Plugins/Android/mainTemplate.gradle` file. You need to edit this file to include the following dependencies:
+
+```groovy
+dependencies {
+    implementation 'androidx.browser:browser:1.4.0'
+    implementation 'androidx.appcompat:appcompat:1.4.2'
+    // other dependencies...
+}
+```
+```
+
+6. Open the `Assets/Plugins/Android/gradleTemplate.properties` file and add the following line to the end of the file:
+
+```properties
+android.useAndroidX=true
+```
+
+## Usage
+
+To use Unity SDK to distribute coins to gamers, you need to perform the following steps:
+
+### 1. Import the SDK
+
+Add the following line of code at the top of your C# script:
+
+```csharp
+using PlaySuper;
+```
+
+### 2. Initialize the SDK
+
+To initialize the SDK instance, you need to call the `Initialize` method within a C# script. First, log in to the PlaySuper console and navigate to your game's settings to copy the API key. Click on the **View API keys** button at the top-right to view and copy an API key.
+
+Once you have the API key, use the following code snippet to initialize the SDK:
+
+```csharp
+void Awake()
+{
+    PlaySuperUnity.Initialize("YOUR_API_KEY");
+}
+```
+
+<Callout type="warning">
+Make sure you change API Key in your code, when you Regenerate the API Key from console. The API Key on console must match the API key in code.
+</Callout>
+
+<Callout type="info">
+You can call the `Initialize` method in any top-level script that loads in your first scene, inside the `Awake` lifecycle method. This ensures that the playsuper SDK is available across all scenes. Alternatively, you can also create a new GameObject specifically for SDK initialization and place it in your first scene.
+</Callout>
+
+### 3. Open Rewards Store
+
+To open rewards store in an in-app-browser, you can use the following code:
+
+```csharp
+PlaySuperUnity.OpenStore();
+```
+
+### 4. Distribute Coins
+
+To distribute coins to gamers, first navigate to the PlaySuper console, navigate to the Coins Page from sidebar and copy the desired coinId you want to distribute.
+
+Once you have the coin id copied, you can use the following to distribute coins in your game-play code:
+
+```csharp
+PlaySuperUnity.DistributeCoins("COIN_ID", amount);
+```
+
+### 5. Get User Balance
+
+To retrieve the user's coin balances, use the following snippet to get a `List<CoinBalance>`:
+
+```csharp
+PlaySuperUnity.GetBalance((List<CoinBalance> balances) => {
+    foreach (CoinBalance balance in balances)
+    {
+        Debug.Log($"Coin: {balance.name}, Amount: {balance.amount}");
+    }
+});
+```
+
+The `CoinBalance` class will have the following properties:
+
+1. **id** - Coin ID
+2. **name** - Coin Name  
+3. **url** - Coin Image URL
+4. **amount** - coin Balance
+
+### 6. Check Login Status
+
+To check if the user is logged into the Store, you can use the `IsLoggedIn` method, which returns a boolean value:
+
+```csharp
+bool isLoggedIn = PlaySuperUnity.IsLoggedIn();
+if (isLoggedIn)
+{
+    Debug.Log("User is logged in");
+}
+else
+{
+    Debug.Log("User is not logged in");
+}
+```
+
+## Handling Offline Scenarios
+
+This guide explains how to work with the existing PlaySuperUnity SDK to support offline balance checks and coin distribution in your game.
+
+### 1. Offline Coin Distribution
+
+When distributing coins, use the `DistributeCoins` method, but wrap it in your own offline-aware method:
+
+```csharp
+public void DistributeCoinsWithOfflineSupport(string coinId, int amount)
+{
+    if (Application.internetReachability != NetworkReachability.NotReachable)
+    {
+        PlaySuperUnity.DistributeCoins(coinId, amount);
+    }
+    else
+    {
+        // Store offline transaction
+        OfflineTransaction transaction = new OfflineTransaction
+        {
+            coinId = coinId,
+            amount = amount,
+            timestamp = System.DateTime.Now
+        };
+        offlineTransactions.Add(transaction);
+        
+        // Update local balance
+        UpdateLocalBalance(coinId, amount);
+    }
+}
+```
+
+### 2. Offline Balance Checks
+
+To check balances, create a wrapper around the `GetBalance` method:
+
+```csharp
+public void GetBalanceWithOfflineSupport(System.Action<List<CoinBalance>> callback)
+{
+    if (Application.internetReachability != NetworkReachability.NotReachable)
+    {
+        PlaySuperUnity.GetBalance((balances) => {
+            // Update local cache with server data
+            localBalances = balances;
+            callback(balances);
+        });
+    }
+    else
+    {
+        // Return cached/local balances
+        callback(localBalances);
+    }
+}
+```
+
+### 3. Syncing Offline Transactions
+
+Implement a method to sync offline transactions when online:
+
+```csharp
+public void SyncOfflineTransactions()
+{
+    if (Application.internetReachability != NetworkReachability.NotReachable && offlineTransactions.Count > 0)
+    {
+        foreach (var transaction in offlineTransactions)
+        {
+            PlaySuperUnity.DistributeCoins(transaction.coinId, transaction.amount);
+        }
+        offlineTransactions.Clear();
+    }
+}
+```
+
+### 4. Best Practices
+
+1. Always use your wrapper methods (`DistributeCoinsWithOfflineSupport` and `GetBalanceWithOfflineSupport`) instead of calling the SDK methods directly.
+
+2. Implement a network status check:
+
+```csharp
+private bool IsOnline()
+{
+    return Application.internetReachability != NetworkReachability.NotReachable;
+}
+```
+
+3. Attempt to sync offline transactions when the game starts or when network becomes available:
+
+```csharp
+void Start()
+{
+    SyncOfflineTransactions();
+}
+```
+
+- Regularly refresh balances in your UI, especially after network status changes.
+
+## Troubleshooting
+
+Common issues and solutions:
+
+- **API Key Issues**: Ensure your API key matches between console and code
+- **Android Build Issues**: Verify gradle templates are properly configured
+- **Network Issues**: Implement proper offline handling as described above
+- **GPM Installation**: Make sure GPM WebView is properly installed
+
+## Support
+
+Need help with Unity integration?
+- **Email:** [engineering@playsuper.club](mailto:engineering@playsuper.club)
+- **GitHub:** [unity-sdk-public](https://github.com/PlaySuper/unity-sdk-public)
+- **Documentation:** Refer to this guide and console documentation

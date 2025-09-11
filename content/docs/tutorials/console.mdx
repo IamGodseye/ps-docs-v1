@@ -1,0 +1,241 @@
+---
+title: PlaySuper Console
+description: Learn how to use the PlaySuper Console to manage your rewards
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import Video from '../../../lib/video';
+import Embed from '../../../lib/embed';
+
+# PlaySuper Console
+
+The PlaySuper Console is your central hub for managing rewards, tracking user engagement, and configuring your PlaySuper integration.
+
+PlaySuper offers these core components:
+
+- **Console**: Web interface for managing features and monitoring performance
+- **API**: Integration of PlaySuper functionality into your game
+- **SDK**: Access PlaySuper services directly within your game's code
+
+<Callout type="info">
+This guide covers account creation, game setup, reward configuration, store theming, and integration options.
+</Callout>
+
+## Part 1: Setting Up the Console
+
+### Steps:
+
+1. **Sign In with Google**
+   - Navigate to [PlaySuper Console](https://console.playsuper.club/)
+   - Use the "Sign In with Google" option to log in
+
+2. **Create a Game Studio**
+   - Under the "Organization" tab, create your game studio
+   - Invite team members to collaborate through the "Invite Users" option
+
+3. **Create Your Game**
+   - Navigate to the "Games" section
+   - Click on "Create Game," then add your game's name, logo, and other details
+
+4. **Understanding Coins**
+   - Go to the "Coins" section to create a coin for your game
+   - Set the **Conversion Rate**, **Expiry Date**, and enable or disable the "Organization-Wide Coin" feature based on your requirements
+   - Copy the coinId - you'll need this later for integration
+
+   <img src="https://d1btycpz485vry.cloudfront.net/images/console-coinid.png" alt="Coin Creation Screen" width="100%" />
+
+5. **Generate API Key**
+   - In the "API" section, generate your API key
+   - This key is essential for integrating PlaySuper services into your game
+
+   <img src="https://d1btycpz485vry.cloudfront.net/images/console-api-key.jpg" alt="API Key Generation" width="100%" />
+
+<Video 
+  src="https://d1btycpz485vry.cloudfront.net/video/PS-console-pt1.mp4"
+  title="Console Setup - Part 1: Getting Started"
+  description="Watch how to setup the PlaySuper console for your organization"
+/>
+
+## Part 2: Custom Reward Pricing
+
+### Steps:
+
+1. **Access Rewards**
+   - Go to the "Games" section, then click on the "Rewards" tab
+   - Select a reward card to view its details
+
+2. **Set Custom Pricing**
+   - Click "Edit" to configure the reward's pricing
+   - Adjust the maximum and minimum coin limits, then set the price as needed
+
+3. **Save Changes**
+   - Click "Save" to update the reward pricing
+   - The changes will be immediately reflected in your store
+
+<Video 
+  src="https://d1btycpz485vry.cloudfront.net/video/PS-console-pt2.mp4"
+  title="Console Setup - Part 2: Custom Reward Pricing"
+  description="Learn how to set custom pricing for rewards in the PlaySuper console"
+/>
+
+## Part 3: Store Theming and Configuration
+
+### Steps:
+1. **Create a Theme**
+   - Open the "Store Builder" and select a template, such as the dark theme
+   - Customize configurations for three pages: Home, Reward Details, and Login Page
+   - Save the theme as a draft or publish it for use in your game
+
+2. **Configure Store in Game**
+   - Navigate to the "Games" section and configure your game's store to use the theme you created
+
+3. **Customize Store Layout**
+   - Use the Store Builder to:
+     - Swap sections
+     - Create or disable sections
+   - Configure widgets by type, content logic, and maximum rewards displayed
+
+4. **Login Page Customization**
+   - Upload your logo and a background image to personalize the login page
+
+5. **Publish and Save**
+   - Save all changes to finalize your store configuration
+
+<Video 
+  src="https://d1btycpz485vry.cloudfront.net/video/PS-console-pt3.mp4"
+  title="Console Setup - Part 3: Store Theming"
+  description="See how to customize the PlaySuper store using the console"
+/>
+
+<Callout type="info">
+For a more detailed guide on store theming, watch the complete walkthrough below.
+</Callout>
+
+<Embed 
+  src="https://www.loom.com/embed/68b91707d6bd4533b2577516409eca4d?sid=35a29083-7777-431b-9e43-2d8ce490bcd7"
+  title="Complete Console Walkthrough"
+  description="Comprehensive video guide covering all aspects of the PlaySuper console"
+  height="400px"
+/>
+
+## Advanced Integration Features
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+  <div className="border border-fd-border rounded-lg p-5 bg-white/50 dark:bg-slate-900/50">
+    <h3 className="text-xl font-bold mb-3">Internationalization (i18n)</h3>
+    <ul className="list-disc pl-6 space-y-2">
+      <li>The store interface supports multiple languages, including various Indian and foreign languages</li>
+      <li>Users can change the language directly in the user interface</li>
+      <li>For API integration, use the <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">x-language</code> header to specify the desired language</li>
+      <li>Supported languages include: <code>en</code> (English), <code>hi</code> (Hindi), <code>bn</code> (Bengali), and more</li>
+    </ul>
+  </div>
+  
+  <div className="border border-fd-border rounded-lg p-5 bg-white/50 dark:bg-slate-900/50">
+    <h3 className="text-xl font-bold mb-3">Verify-Payments Flow</h3>
+    <ul className="list-disc pl-6 space-y-2">
+      <li>A dedicated endpoint is available for verifying payment status</li>
+      <li>Use the order ID obtained from the purchase API in your verification request</li>
+      <li>The endpoint returns a boolean indicating if the order was successful</li>
+      <li>Implement this flow to ensure smooth transaction handling and user experience</li>
+    </ul>
+    
+    <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded mt-4 border border-slate-200 dark:border-slate-700">
+      <code className="text-sm font-mono">
+        GET /api/v1/orders/:orderId/verify
+      </code>
+    </div>
+  </div>
+</div>
+
+## PlaySuper Store Demo
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+  <div>
+    <h3>Store Features</h3>
+
+    #### Store Overview
+    - Organized into distinct category tiles (Gifting, Beauty & Personal Care, Electronics, Home & Living, etc.)
+    - Dynamic product thumbnails and icons for easy recognition
+
+    #### Special Features
+    - "Expiring Soon" section with countdown timers
+    - Multiple discount formats: FLAT ₹ discounts (200₹, 500₹), percentage discounts (15%, 66%), and extra discounts (5%)
+    - Brand promotions with product images and company logos
+
+    #### Reward System
+    - Coin balance displayed in header
+    - Specific coin amounts for reward unlocking
+    - Clear validity dates for all rewards
+    - Streamlined redemption process with code input
+    - Expandable sections for redemption instructions and terms
+
+    #### User Experience
+    - Simple phone number + OTP authentication
+    - Quick access navigation bar
+    - Intuitive back button navigation
+    - Clean interface focused on visuals and details
+  </div>
+  
+  <div>
+    <Video 
+      src="https://d1btycpz485vry.cloudfront.net/video/ps-store-demo-2025.mp4"
+      title="PlaySuper Store Demo 2025"
+      description="See the PlaySuper store in action on mobile"
+      className="w-full max-w-[375px] mx-auto"
+    />
+  </div>
+</div>
+
+## Integration Demo
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+  <div>
+    <h3>Sample Integration Flow</h3>
+
+    1. User clears a level and coins are distributed to their account
+    2. User visits store to check balance and available rewards
+    3. User selects and redeems a coupon
+    4. Reward is delivered to the user through integrated delivery process
+
+    This demonstration shows a complete end-to-end integration flow from user action to reward delivery.
+    The seamless experience keeps users engaged and builds loyalty through immediate gratification.
+  </div>
+  
+  <div>
+    <Video 
+      src="https://d1btycpz485vry.cloudfront.net/video/ps-integration-deliveryBoy.mp4"
+      title="Complete Integration Demo"
+      description="Real-world example of the PlaySuper integration flow with delivery"
+      className="w-full max-w-[375px] mx-auto"
+    />
+  </div>
+</div>
+
+## Next Steps & Additional Resources
+
+### Unity SDK Guide
+Learn the basics about integrating PlaySuper with Unity games
+
+[View Unity SDK Guide →](/docs/tutorials/unity-sdk)
+
+### API Documentation
+Detailed Swagger documentation for all available endpoints
+
+[View API Reference Guide →](/docs/api/quick-start)
+
+## Troubleshooting
+
+Common issues and solutions:
+- API key configuration
+- Webhook setup
+- Payment processing
+- User authentication
+
+## Support
+
+Need help with the console? Contact our support team:
+
+- **Email:** [engineering@playsuper.club](mailto:engineering@playsuper.club)
+- **Documentation:** Check our detailed guides
+- **Community:** Join our developer forums

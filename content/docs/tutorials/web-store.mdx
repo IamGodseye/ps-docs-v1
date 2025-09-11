@@ -1,0 +1,356 @@
+---
+title: Embedding the PlaySuper Store in Web
+description: How to embed the PlaySuper store in your web applications
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import Video from '../../../lib/video';
+
+#  Embedding the PlaySuper Store in Web
+
+Learn how to integrate the PlaySuper rewards store directly into your web applications, providing users with a seamless rewards experience.
+
+## See in Action
+
+<Video 
+  src="https://d1btycpz485vry.cloudfront.net/video/playsuperEmbed.mp4"
+  title="PlaySuper Web Store Embedding"
+  description="See how the PlaySuper store looks when embedded in a web application"
+  className="w-full mx-auto"
+/>
+
+<Callout type="info">
+**Get the demo-embedding-html file from here:** [SharePoint Link](https://playsuper-my.sharepoint.com/:u:/g/personal/ajay_ghiyad_playsuper_club/ET6LzR0O5RFErJbm_CXabRcBvm-bqbXkm_lc3veBeQ48gw?e=rZDX1W)
+</Callout>
+
+<Callout type="warning">
+**Note:** Dev environment may have stability issues. Use production environment for demos.
+</Callout>
+
+## Overview
+
+The PlaySuper web store can be embedded in your web application using:
+- **iframe Embedding with PostMessage** - Secure communication (Recommended)
+- **JavaScript SDK** - For dynamic integration
+- **API Integration** - For custom implementations
+
+## Prerequisites
+
+- PlaySuper developer account
+- Active project in PlaySuper Console
+- Basic knowledge of HTML/JavaScript
+
+## Complete Integration Guide
+
+### Step 1: Obtain Your Studio API Key
+
+Log in to the [PlaySuper Console](https://console.playsuper.club/) and find your API key in the studio settings. You will need this for all subsequent API calls.
+
+### Step 2: Create a Player (If one doesn't exist)
+
+Use the following `curl` command to create a new player. Replace `YOUR_API_KEY` and `your-player-uuid` with your actual data.
+
+```bash
+curl -X 'POST' \
+  'https://api.playsuper.club/player/create-with-uuid' \
+  -H 'accept: application/json' \
+  -H 'x-api-key: YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "uuid": "your-player-uuid"
+}'
+```
+
+### Step 3: Obtain a Player Access Token
+
+Once the player exists, use the federated login endpoint to get a JWT `accessToken`. This token is required to authenticate the player within the embedded store.
+
+```bash
+curl -X 'POST' \
+  'https://api.playsuper.club/player/login/federatedByStudio' \
+  -H 'accept: */*' \
+  -H 'x-api-key: YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "uuid": "your-player-uuid"
+}'
+```
+
+The response will contain an `accessToken`. This is the token you will send to the iframe.
+
+### Step 4: Add Coins for Testing (Optional)
+
+To test purchases in the embedded store, distribute some coins to the player. Replace `YOUR_COIN_ID` with an actual coin ID from your console.
+
+```bash
+curl -X 'POST' \
+  'https://api.playsuper.club/coins/YOUR_COIN_ID/distribute' \
+  -H 'accept: */*' \
+  -H 'x-game-uuid: your-player-uuid' \
+  -H 'x-api-key: YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "amount": 100
+  }'
+```
+
+<Callout type="info">
+**Tip:** You can find your coin IDs in the PlaySuper Console under the "Coins" section.
+</Callout>
+
+### Step 5: Embed the Store with PostMessage Communication
+
+Once you have the token, create an iframe and use postMessage for secure communication:
+
+```javascript
+// After obtaining the token from loginWithUuid endpoint
+const token = response.data.access_token;
+const apiKey = 'YOUR_API_KEY';
+
+// Create and configure iframe for the PlaySuper store
+const iframe = document.createElement('iframe');
+
+// Add API key as URL parameter
+const storeUrl = new URL('https://dev-store.playsuper.club');
+storeUrl.searchParams.set('apiKey', apiKey);
+iframe.src = storeUrl.toString();
+
+// Configure iframe security settings
+iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-storage-access-by-user-activation');
+iframe.setAttribute('allow', 'cross-origin-isolated');
+
+// Set up message listener for store communication
+window.addEventListener('message', (event) => {
+    try {
+        const response = event.data;
+
+        if (response.type === 'STORE_READY') {
+            // Store is ready to receive the auth token
+            sendAuthToken();
+        }
+    } catch (error) {
+        console.error('Error processing store message:', error);
+    }
+});
+
+// Function to send auth token to store
+function sendAuthToken() {
+    const authMessage = {
+        type: 'SET_AUTH_TOKEN',
+        value: token
+    };
+
+    iframe.contentWindow.postMessage(authMessage, '*');
+}
+
+// Add iframe to DOM
+document.body.appendChild(iframe);
+```
+
+## Communication Flow
+
+The communication between your application and the PlaySuper store follows this pattern:
+
+1. **Store Initialization**: The iframe loads with the API key as a URL parameter
+2. **Ready Signal**: The store sends a `STORE_READY` message when it's ready to receive authentication
+3. **Token Delivery**: Your application responds by sending the auth token via `SET_AUTH_TOKEN` message
+4. **Store Activation**: The store uses the provided token for authentication
+
+## Important Implementation Details
+
+### Security Configuration
+- **API Key**: Must be provided as a URL parameter when loading the iframe
+- **Authentication Token**: Sent via postMessage after receiving the `STORE_READY` signal
+- **Security**: Use appropriate iframe sandbox attributes for security
+- **Communication**: All data exchange happens through postMessage, not localStorage
+
+### Message Types
+
+#### Incoming Messages (from store):
+- `STORE_READY`: Indicates the store is ready to receive authentication
+
+#### Outgoing Messages (to store):
+- `SET_AUTH_TOKEN`: Provides the JWT token for player authentication
+
+```javascript
+{
+    type: 'SET_AUTH_TOKEN',
+    value: 'your-jwt-token-here' // without Bearer prefix
+}
+```
+
+## Complete Implementation Example
+
+Here's a complete HTML example:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PlaySuper Store Integration</title>
+    <style>
+        #playsuper-store {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 8px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PlaySuper Store Integration</h1>
+        <button onclick="openStore()">Open Rewards Store</button>
+        <div id="store-container"></div>
+    </div>
+
+    <script>
+        const API_KEY = 'YOUR_API_KEY';
+        const PLAYER_UUID = 'your-player-uuid';
+        let playerToken = null;
+
+        // Function to create player and get token
+        async function authenticatePlayer() {
+            try {
+                // Create player if doesn't exist
+                await fetch('https://api.playsuper.club/player/create-with-uuid', {
+                    method: 'POST',
+                    headers: {
+                        'accept': 'application/json',
+                        'x-api-key': API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ uuid: PLAYER_UUID })
+                });
+
+                // Get player token
+                const loginResponse = await fetch('https://api.playsuper.club/player/login/federatedByStudio', {
+                    method: 'POST',
+                    headers: {
+                        'accept': '*/*',
+                        'x-api-key': API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ uuid: PLAYER_UUID })
+                });
+
+                const loginData = await loginResponse.json();
+                playerToken = loginData.access_token;
+                return playerToken;
+            } catch (error) {
+                console.error('Authentication error:', error);
+                throw error;
+            }
+        }
+
+        // Function to create and embed store
+        async function openStore() {
+            try {
+                if (!playerToken) {
+                    await authenticatePlayer();
+                }
+
+                const container = document.getElementById('store-container');
+                container.innerHTML = ''; // Clear existing content
+
+                const iframe = document.createElement('iframe');
+                iframe.id = 'playsuper-store';
+                
+                const storeUrl = new URL('https://dev-store.playsuper.club');
+                storeUrl.searchParams.set('apiKey', API_KEY);
+                iframe.src = storeUrl.toString();
+
+                iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-storage-access-by-user-activation');
+                iframe.setAttribute('allow', 'cross-origin-isolated');
+
+                // Message listener
+                window.addEventListener('message', (event) => {
+                    try {
+                        const response = event.data;
+                        
+                        if (response.type === 'STORE_READY') {
+                            sendAuthToken(iframe);
+                        }
+                    } catch (error) {
+                        console.error('Error processing store message:', error);
+                    }
+                });
+
+                container.appendChild(iframe);
+            } catch (error) {
+                console.error('Error opening store:', error);
+            }
+        }
+
+        // Function to send auth token
+        function sendAuthToken(iframe) {
+            const authMessage = {
+                type: 'SET_AUTH_TOKEN',
+                value: playerToken
+            };
+
+            iframe.contentWindow.postMessage(authMessage, '*');
+        }
+
+        // Optional: Add coins for testing
+        async function addTestCoins(coinId, amount) {
+            try {
+                await fetch(`https://api.playsuper.club/coins/${coinId}/distribute`, {
+                    method: 'POST',
+                    headers: {
+                        'accept': '*/*',
+                        'x-game-uuid': PLAYER_UUID,
+                        'x-api-key': API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ amount })
+                });
+                console.log(`Added ${amount} coins`);
+            } catch (error) {
+                console.error('Error distributing coins:', error);
+            }
+        }
+    </script>
+</body>
+</html>
+```
+
+## Environment Configuration
+
+### Development Environment
+```javascript
+const DEV_STORE_URL = 'https://dev-store.playsuper.club';
+const DEV_API_URL = 'https://dev-api.playsuper.club';
+```
+
+### Production Environment
+
+```javascript
+const PROD_STORE_URL = 'https://store.playsuper.club';
+const PROD_API_URL = 'https://api.playsuper.club';
+```
+
+<Callout type="warning">
+This approach provides secure, real-time communication between your application and the embedded PlaySuper store without requiring direct localStorage access or iframe reloading.
+</Callout>
+
+## Troubleshooting
+
+Common issues and solutions:
+
+- **Store not loading**: Check API key and network connection
+- **CORS errors**: Ensure your domain is whitelisted in PlaySuper Console
+- **Authentication issues**: Verify user ID format and permissions
+- **Mobile display issues**: Test responsive design and touch interactions
+
+## Support
+
+For web integration support:
+- **Email:** [engineering@playsuper.club](mailto:engineering@playsuper.club)
+- **Documentation:** Web SDK reference
+- **Console:** Check integration settings

@@ -1,0 +1,393 @@
+---
+title: PlaySuper API Reference Guide
+description: Complete guide for integrating PlaySuper Rewards API into your game or application
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# PlaySuper Rewards API Quick Start Guide
+
+<Callout type="info">
+This guide will help you quickly integrate PlaySuper Rewards into your game without using an SDK. Follow these steps to set up player authentication, manage coins, and handle rewards.
+</Callout>
+
+## 📋 Overview
+
+The PlaySuper API allows you to integrate a complete rewards system into your application. Users can earn coins through in-app activities and redeem them for real rewards including gift cards, discount coupons, and physical products.
+
+## 🔑 Prerequisites
+
+- [ ] Game API Key (obtained from PlaySuper console)
+- [ ] Basic understanding of REST APIs  
+- [ ] Ability to make HTTP requests in your game code
+
+## 🔧 Setup & Authentication
+
+### 1. Obtain API Key
+
+- Log into the PlaySuper console
+- Navigate to API section
+- Copy your Game API Key
+- Go to https://api.playsuper.club/docs/ for full swagger documentation
+
+<Callout type="warning">
+**API Documentation**: Full Swagger documentation is available at https://api.playsuper.club/docs-json
+</Callout>
+
+### 2. Player Authentication
+
+Use these endpoints to authenticate players:
+
+#### Request OTP
+```http
+POST /player/request-otp
+```
+
+#### Verify OTP and get access token
+```http
+POST /player/login
+```
+
+<Callout type="tip">
+🔐 Store the access token securely for subsequent requests.
+</Callout>
+
+### 📝 Important Note About Player Identification
+
+PlaySuper supports two ways to identify players:
+
+1. **Phone Number + OTP** (shown above)
+2. **Game UUID**: Use your game's internal player ID via `x-game-uuid` header
+
+- You can use either method consistently throughout the API calls
+- If using Game UUID:
+  - Include `x-game-uuid` header in your requests
+  - The value should be your game's unique player identifier
+  - No phone authentication needed
+  - Directly jump to Rewards and Distribute coin API
+
+## 🌐 Web Store Embedding
+
+### Obtain Authentication Token
+
+First, create a player using the UUID and obtain a JWT token through the federated login endpoint:
+
+```bash
+POST /player/login/federatedByStudio
+Headers:
+  x-api-key: YOUR_API_KEY
+Body:
+  { "uuid": "YOUR_PLAYER_ID" }
+```
+
+### Embed the Store with PostMessage Communication
+
+Once you have the token, create an iframe and use postMessage for secure communication:
+
+```javascript
+// After obtaining the token from loginWithUuid endpoint
+const token = response.data.access_token;
+const apiKey = 'YOUR_API_KEY';
+
+// Create and configure iframe for the PlaySuper store
+const iframe = document.createElement('iframe');
+
+// Add API key as URL parameter
+const storeUrl = new URL('https://store.playsuper.club');
+storeUrl.searchParams.set('apiKey', apiKey);
+iframe.src = storeUrl.toString();
+
+// Configure iframe security settings
+iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-storage-access-by-user-activation');
+iframe.setAttribute('allow', 'cross-origin-isolated');
+
+// Set up message listener for store communication
+window.addEventListener('message', (event) => {
+    try {
+        const response = event.data;
+
+        if (response.type === 'STORE_READY') {
+            // Store is ready to receive the auth token
+            sendAuthToken();
+        }
+    } catch (error) {
+        console.error('Error processing store message:', error);
+    }
+});
+
+// Function to send auth token to store
+function sendAuthToken() {
+    const authMessage = {
+        type: 'SET_AUTH_TOKEN',
+        value: token
+    };
+
+    iframe.contentWindow.postMessage(authMessage, '*');
+}
+
+// Add iframe to DOM
+document.body.appendChild(iframe);
+```
+
+### Communication Flow
+
+The communication between your application and the PlaySuper store follows this pattern:
+
+1. **Store Initialization**: The iframe loads with the API key as a URL parameter
+2. **Ready Signal**: The store sends a `STORE_READY` message when it's ready to receive authentication
+3. **Token Delivery**: Your application responds by sending the auth token via `SET_AUTH_TOKEN` message
+4. **Store Activation**: The store uses the provided token for authentication
+
+### Important Implementation Details
+
+- **API Key**: Must be provided as a URL parameter when loading the iframe
+- **Authentication Token**: Sent via postMessage after receiving the `STORE_READY` signal
+- **Security**: Use appropriate iframe sandbox attributes for security
+- **Communication**: All data exchange happens through postMessage, not localStorage
+- **Error Handling**: Implement proper error handling for message communication
+
+### Message Types
+
+**Incoming Messages (from store):**
+- `STORE_READY`: Indicates the store is ready to receive authentication
+
+**Outgoing Messages (to store):**
+- `SET_AUTH_TOKEN`: Provides the JWT token for player authentication
+
+```javascript
+{
+    type: 'SET_AUTH_TOKEN',
+    value: 'your-jwt-token-here' // (without Bearer prefix)
+}
+```
+
+<Callout type="warning">
+This approach provides secure, real-time communication between your application and the embedded PlaySuper store without requiring direct localStorage access or iframe reloading.
+</Callout>
+
+## 💰 Managing Coins
+
+### Distribute Coins
+
+Reward players with coins:
+
+```http
+POST /coins/{coinId}/distribute
+```
+
+Replace `{coinId}` with the appropriate coin identifier.
+
+## 🎁 Handling Rewards
+
+### 1. Fetch Available Rewards
+
+Get list of rewards players can purchase:
+
+```http
+GET /rewards
+```
+
+### 🔍 Filtering Rewards
+
+The `/rewards` endpoint supports powerful filtering options to help you customize the rewards experience:
+
+```bash
+GET /rewards
+```
+
+### Available Filter Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `category` | string | No | Filter by category (e.g., "Food", "Entertainment") |
+| `brand` | string | No | Filter by specific brand name |
+| `contentLogic` | string | No | Control how content is filtered |
+| `layoutStyle` | string | No | Specify preferred layout style |
+| `giftCard` | boolean | No | Show only gift card rewards when `true` |
+| `rewardIds` | array | No | Filter by specific reward IDs (example: `["reward-id-1","reward-id-2"]`) |
+| `limit` | number | No | Control number of results per page |
+| `page` | number | No | Specify which page of results to return |
+
+### Example Requests
+
+**Basic category filtering:**
+```bash
+GET /rewards?coinId=coin-123&category=Food
+Headers:
+  x-language: en
+  x-api-key: <your-api-key>
+```
+
+**Paginated brand-specific rewards:**
+```bash
+GET /rewards?coinId=coin-123&brand=Starbucks&limit=20&page=1
+Headers:
+  x-language: en
+  x-api-key: <your-api-key>
+```
+
+**Looking up specific rewards:**
+```bash
+GET /rewards?coinId=coin-123&rewardIds=["reward-abc-123","reward-def-456"]
+Headers:
+  x-language: en
+  x-api-key: <your-api-key>
+```
+
+**Gift Card Filter:**
+```bash
+GET /rewards?coinId=coin-123&giftCard=true
+Headers:
+  x-language: en
+  x-api-key: <your-api-key>
+```
+
+<Callout type="tip">
+This filtering functionality enables you to create more targeted and customized reward experiences in your game interface.
+</Callout>
+
+### 2. Purchase Reward
+
+Allow players to buy rewards:
+
+Use either Bearer token OR `x-game-uuid` header for authentication:
+
+```http
+POST /rewards/purchase
+Headers:
+  Authorization: Bearer <token>
+  // OR
+  x-game-uuid: <your-game-player-id>
+```
+
+### Note: isPrefillEnabled Parameter
+
+The `isPrefillEnabled` parameter in the `/rewards/purchase` endpoint is a boolean value that controls the automatic handling of coin transactions during reward redemption:
+
+- When set to `true`: The system automatically distributes the same amount of coins to the player and then immediately deducts them when redeeming the reward. This maintains consistency in the transaction system by creating both credit and debit entries.
+- By default, this works with `isPrefillEnabled` set to `false`.
+
+Example usage in request body:
+
+```json
+{
+  "rewardId": "reward-123",
+  "coinId": "coin-456", 
+  "isPrefillEnabled": true
+}
+```
+
+<Callout type="info">
+This approach ensures transaction integrity and complete audit trail in the rewards system.
+</Callout>
+
+## 👤 Player Management
+
+All player endpoints support both authentication methods - Bearer token OR `x-game-uuid` header:
+
+### Create Player using UUID
+
+Create player profile using your game's unique-identifier:
+
+```http
+POST /player/create-with-uuid
+Headers:
+  x-game-uuid: <your-game-player-id>
+```
+
+### Get Player Profile
+
+Retrieve player information:
+
+```http
+GET /player/profile
+Headers:
+  Authorization: Bearer <token>
+  // OR
+  x-game-uuid: <your-game-player-id>
+```
+
+### View Player Wallets
+
+Check player's coin balances:
+
+```http
+GET /player/wallets
+Headers:
+  Authorization: Bearer <token>
+  // OR
+  x-game-uuid: <your-game-player-id>
+```
+
+### Fetch Player Orders
+
+Get history of reward purchases:
+
+```http
+GET /player/orders
+Headers:
+  Authorization: Bearer <token>
+  // OR
+  x-game-uuid: <your-game-player-id>
+```
+
+## 🌐 Language Support
+
+For fetching orders, rewards, and transactions, you can specify the desired language using the `x-language` header with the appropriate language code. The following languages are supported:
+
+| Code | Language Name |
+|------|---------------|
+| en | English |
+| fr | Français |
+| es | Español |
+| pt | Português |
+| ru | Русский |
+| fil | Filipino |
+| hi | हिन्दी |
+| bn | বাংলা |
+| te | తెలుగు |
+| mr | मराठी |
+| ta | தமிழ் |
+| ur | اردو |
+| gu | ગુજરાતી |
+| kn | ಕನ್ನಡ |
+| or | ଓଡ଼ିଆ |
+| ml | മലയാളം |
+
+To use a specific language, include the `x-language` header in your API requests. For example:
+
+```http
+GET /player/orders
+Headers:
+  x-language: fr
+  Authorization: Bearer <token>
+  // OR
+  x-game-uuid: <your-game-player-id>
+```
+
+This will return the order information in French.
+
+## 🔒 Important Security Notes
+
+<Callout type="warning">
+**Security Best Practices:**
+- Always use HTTPS for API calls
+- Implement proper error handling
+- Keep the Game API Key confidential
+- Use bearer token authentication for player-specific endpoints
+</Callout>
+
+## 📚 Next Steps
+
+- Explore full API documentation at https://api.playsuper.club/docs/
+- Implement error handling and edge cases
+- Test thoroughly in a staging environment before going live
+
+## 🆘 Need Help?
+
+- **Full API Documentation**: [api.playsuper.club/docs](https://api.playsuper.club/docs)
+- **Swagger JSON**: [api.playsuper.club/docs-json](https://api.playsuper.club/docs-json)
+- **Technical Support**: [engineering@playsuper.club](mailto:engineering@playsuper.club)
+- **Schedule Demo**: [aishikpyne@playsuper.club](mailto:aishikpyne@playsuper.club)
+
+Happy integrating! 🎮✨

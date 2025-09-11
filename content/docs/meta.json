@@ -1,0 +1,11 @@
+{
+  "title": "PlaySuper Documentation",
+  "pages": [
+    "index",
+    "tutorials/console",
+    "tutorials/unity-sdk",
+    "tutorials/web-store",
+    "api",
+    "concepts/rewards-types"
+  ]
+}

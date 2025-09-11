@@ -1,13 +1,229 @@
 ---
-title: Hello World
-description: Your first document
+title: Welcome to PlaySuper
+description: For founders and developers who want to add a rewards store to their app
 ---
 
-Welcome to the docs! You can start writing documents in `/content/docs`.
+import { Callout } from 'fumadocs-ui/components/callout';
+import Video from '../../lib/video';
+import Embed from '../../lib/embed';
 
-## What is Next?
+# Welcome to PlaySuper
 
-<Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.vercel.app" />
-</Cards>
+> **For founders and developers who want to add a rewards store to their app.**
+> PlaySuper lets users earn coins in your app and redeem them for real rewards like gift cards, discount coupons, and digital credits.
+
+## See it in action
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+  <div>
+
+    <Video 
+      src="https://d1btycpz485vry.cloudfront.net/video/gcommerce-playsuper-demo-portrait.mp4"
+      title="Gcommerce Demo"
+      description="E-commerce physical goods with payments integration."
+      className="w-full max-w-[375px] mx-auto"
+    />
+  </div>
+  
+  <div>
+    
+    <Video 
+      src="https://d1btycpz485vry.cloudfront.net/video/reward-playsuper-demo-portrait.mp4"
+      title="Rewards Store Demo"
+      description="Discount coupons and gift cards from popular brands."
+      className="w-full max-w-[375px] mx-auto"
+    />
+  </div>
+</div>
+
+### What users get
+
+- **Gift cards**: Starbucks, Amazon, Google Play, Steam
+- **Discount coupons**: Swiggy, Zomato, BookMyShow, Netflix
+- **Gcommerce**: Physical goods that gets delivered to house (India only)
+
+All rewards are real and delivered instantly.
+
+## How it works
+
+1. **You integrate PlaySuper into your app:**
+   
+   Choose one option:
+   - **Unity SDK** (for Unity games)
+   - **Web iframe** (for web apps)
+   - **WebView** (for React Native/mobile apps)
+   - **Direct APIs** (build your own UI)
+
+2. **You give users coins when they do things in your app**
+   
+   Examples:
+   - Complete a level (games)
+   - Make a purchase (e-commerce)
+   - Finish a workout (fitness apps)
+   - Complete a lesson (education apps)
+
+3. **Users spend coins in the PlaySuper store**
+   
+   The store opens inside your app. Users browse rewards, check their coin balance, and redeem items.
+
+## Integration options
+
+### Unity Games
+
+**What you get**: Native Unity SDK  
+**Setup time**: 30 minutes  
+**Requirements**:
+- Unity 2022.3+
+- Basic C# knowledge
+
+**Quick setup**:
+
+1. Install GPM from Unity Asset Store
+2. Import PlaySuper Unity SDK
+3. Initialize with your API key:
+   ```csharp
+   PlaySuperUnitySDK.Initialize("YOUR_API_KEY");
+   ```
+4. Open store and distribute coins:
+   ```csharp
+   PlaySuperUnitySDK.Instance.OpenStore();
+   PlaySuperUnitySDK.Instance.DistributeCoins(coinId, amount);
+   ```
+
+**Documentation**: [Unity SDK Guide](/docs/tutorials/unity-sdk)
+
+### Web Applications
+
+**What you get**: iframe with postMessage communication  
+**Setup time**: 45 minutes  
+**Requirements**:
+- JavaScript/TypeScript knowledge
+- Ability to implement iframes
+
+**Quick setup**:
+
+1. Get API key from PlaySuper Console
+2. Create player and get auth token:
+   ```javascript
+   POST /player/create-with-uuid-batch {"uuid": ["YOUR_PLAYER_ID"] }
+   POST /player/login/federatedByStudio{ "uuid": "YOUR_PLAYER_ID" }
+   ```
+3. Embed store in iframe:
+   ```javascript
+   const iframe = document.createElement('iframe');
+   storeUrl.searchParams.set('apiKey', apiKey);
+   iframe.src = storeUrl.toString();
+   ```
+
+**Documentation**: [Web Integration Guide](/docs/tutorials/web-store)
+
+### React Native / Mobile Apps
+
+**What you get**: WebView integration (similar to web)  
+**Setup time**: 1 hour  
+**For**: ReactNative, Flutter, Android / iOS
+
+**Implementation**: The WebView implementation is similar to the iframe embedding method described in our [Web Embedding Guide](/docs/tutorials/web-store). Use a WebView component instead of iframe and implement the same postMessage communication pattern.
+
+<Callout type="info">
+**Need help?** Contact us if you face any issues with WebView implementation.
+</Callout>
+
+### Direct API Integration
+
+**What you get**: REST APIs only (no store UI)  
+**Setup time**: 2-4 hours  
+**Best for**: Custom UI implementations
+
+**APIs available**:
+- Player management
+- Coin distribution
+- Reward purchasing
+- Balance checking
+
+**Documentation**: [API Reference](/docs/api/quick-start)
+
+## Getting started
+
+### Step 1: Set up your account (5 minutes)
+
+- Go to **Development Console**: [dev-console.playsuper.club](https://dev-console.playsuper.club/)
+- Follow our [**PlaySuper Console Setup Guide**](/docs/tutorials/console) for complete setup instructions
+- Generate your API key
+
+### Step 2: Create Coins (5 minutes)
+
+- Go to "Coins" section in console
+- Create a new coin for your app
+- Set conversion rate (how much 1 coin is worth)
+- Copy the coin ID
+
+Detailed steps in [**PlaySuper Console Setup Guide**](/docs/tutorials/console)
+
+### Step 3: Choose integration method (30-60 minutes)
+
+Pick Unity SDK, Web iframe, Mobile WebView, or Direct APIs based on your app type.
+
+Follow the setup guide for your chosen method from the integration options above.
+
+### Step 4: Test and customize (1-2 hours)
+
+- Test coin distribution
+- Test store opening
+- Customize store theme (optional)
+- Set up specific reward categories (optional)
+
+## Development Resources
+
+| Resource | Purpose | Link |
+|----------|---------|------|
+| **Dev Console** | Setup & management | [dev-console.playsuper.club](https://dev-console.playsuper.club/) |
+| **Dev API Docs** | Complete API reference | [dev.playsuper.club/docs](https://dev.playsuper.club/docs) |
+| **Dev API baseUrl** | Development API | [dev.playsuper.club](https://dev.playsuper.club) |
+| **Dev Store Demo** | Live preview | [dev-store.playsuper.club](https://dev-store.playsuper.club/) |
+
+## Production Resources
+
+| Resource | Purpose | Link |
+|----------|---------|------|
+| **Console** | Production management | [console.playsuper.club](https://console.playsuper.club/) |
+| **API Docs** | Production API reference | [api.playsuper.club/docs](https://api.playsuper.club/docs) |
+| **API baseUrl** | Production API | [api.playsuper.club](https://api.playsuper.club) |
+| **Store** | Live production store | [store.playsuper.club](https://store.playsuper.club/) |
+
+## Documentation Guides
+
+- [**Documentation**](https://docs.playsuper.club/) - Home page
+- [**PlaySuper Console Setup Guide**](/docs/tutorials/console) - Complete console setup walkthrough
+- [**Unity SDK Guide**](/docs/tutorials/unity-sdk) - Unity integration documentation
+- [**Web Embedding Guide**](/docs/tutorials/web-store) - iframe + postMessage implementation
+- [**PlaySuper API Reference Guide**](/docs/api/quick-start) - Complete API documentation
+
+## Quick Navigation
+
+### Tutorials
+
+- [🪁 Playsuper Console](/docs/tutorials/console) - Learn how to use the PlaySuper Console
+- [🎮 Unity SDK Guide](/docs/tutorials/unity-sdk) - Complete Unity integration guide
+- [🏪 Web Store Embedding](/docs/tutorials/web-store) - Web application integration
+
+### Concepts
+
+- [Ephemeral vs Reserved Rewards](/docs/concepts/rewards-types) - Understanding reward types
+
+### API Reference
+
+- [🌁 PlaySuper Rewards API: Quick Start Guide](/docs/api/quick-start) - Complete API documentation
+
+### Additional Resources
+
+- [💼 Careers](/docs/careers) - Join the PlaySuper team
+- [🎁 Integration Updates](/docs/integration-guide) - Latest updates and migration guide
+
+## Need help?
+
+- **Email**: [engineering@playsuper.club](mailto:engineering@playsuper.club)
+- **Schedule call**: with [aishikpyne@playsuper.club](mailto:aishikpyne@playsuper.club)
+
+**Timeline**: Most teams get basic integration running in 1-2 days.
+

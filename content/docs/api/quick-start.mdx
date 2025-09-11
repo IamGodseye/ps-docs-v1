@@ -1,0 +1,512 @@
+---
+title: PlaySuper Rewards API Quick Start Guide
+description: Get started with the PlaySuper Rewards API
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# 🌁 PlaySuper Rewards API: Quick Start Guide
+
+Get up and running with the PlaySuper Rewards API in minutes.
+
+## Introduction
+
+The PlaySuper Rewards API allows you to integrate PlaySuper's reward system directly into your application without using our SDKs. This gives you complete control over the user experience while leveraging our reward infrastructure.
+
+## Authentication
+
+All API requests require authentication using your API key.
+
+### Getting Your API Key
+
+1. Log in to the [PlaySuper Console](https://console.playsuper.club)
+2. Navigate to your project settings
+3. Click "View API Keys" in the top-right corner
+4. Copy your API key
+
+<Callout type="warning">
+Keep your API keys secure and never expose them in client-side code. Use environment variables and secure your keys.
+</Callout>
+
+### API Key Usage
+
+Include your API key in the request headers:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+```
+
+## Base URL
+
+- **Production:** `https://api.playsuper.club/v1`
+- **Sandbox:** `https://api-sandbox.playsuper.club/v1`
+
+## Core Endpoints
+
+### 1. Initialize User
+
+Create or retrieve a user in the PlaySuper system.
+
+```http
+POST /users
+```
+
+**Request Body:**
+```json
+{
+  "userId": "unique-user-id",
+  "email": "user@example.com",
+  "name": "User Name",
+  "metadata": {
+    "level": 5,
+    "country": "US"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "user": {
+    "id": "unique-user-id",
+    "email": "user@example.com",
+    "name": "User Name",
+    "createdAt": "2024-01-10T10:30:00Z",
+    "updatedAt": "2024-01-10T10:30:00Z"
+  }
+}
+```
+
+### 2. Distribute Coins
+
+Award coins to a user for completing actions.
+
+```http
+POST /coins/distribute
+```
+
+**Request Body:**
+```json
+{
+  "userId": "unique-user-id",
+  "coinId": "COIN_ID",
+  "amount": 100,
+  "reason": "level_completion",
+  "metadata": {
+    "level": 5,
+    "score": 1500
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "transaction": {
+    "id": "txn_123456",
+    "userId": "unique-user-id",
+    "coinId": "COIN_ID",
+    "amount": 100,
+    "reason": "level_completion",
+    "timestamp": "2024-01-10T10:30:00Z"
+  }
+}
+```
+
+### 3. Get User Balance
+
+Retrieve a user's current coin balances.
+
+```http
+GET /users/{userId}/balance
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "balances": [
+    {
+      "coinId": "GOLD_COIN",
+      "name": "Gold Coins",
+      "amount": 250,
+      "imageUrl": "https://cdn.playsuper.club/coins/gold.png"
+    },
+    {
+      "coinId": "SILVER_COIN", 
+      "name": "Silver Coins",
+      "amount": 500,
+      "imageUrl": "https://cdn.playsuper.club/coins/silver.png"
+    }
+  ]
+}
+```
+
+### 4. Get Available Rewards
+
+Fetch the list of rewards users can redeem.
+
+```http
+GET /rewards
+```
+
+**Query Parameters:**
+- `category` - Filter by reward category
+- `minPrice` - Minimum coin price
+- `maxPrice` - Maximum coin price
+- `limit` - Number of results (default: 20)
+- `offset` - Pagination offset
+
+**Response:**
+```json
+{
+  "success": true,
+  "rewards": [
+    {
+      "id": "reward_123",
+      "name": "Amazon $10 Gift Card",
+      "description": "Digital gift card for Amazon",
+      "category": "gift_cards",
+      "price": {
+        "coinId": "GOLD_COIN",
+        "amount": 1000
+      },
+      "imageUrl": "https://cdn.playsuper.club/rewards/amazon-10.png",
+      "availability": "in_stock"
+    }
+  ],
+  "pagination": {
+    "total": 50,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+### 5. Redeem Reward
+
+Process a reward redemption for a user.
+
+```http
+POST /rewards/redeem
+```
+
+**Request Body:**
+```json
+{
+  "userId": "unique-user-id",
+  "rewardId": "reward_123",
+  "quantity": 1
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "redemption": {
+    "id": "redemption_456",
+    "userId": "unique-user-id",
+    "rewardId": "reward_123",
+    "quantity": 1,
+    "status": "processing",
+    "estimatedDelivery": "2024-01-10T15:00:00Z",
+    "createdAt": "2024-01-10T10:30:00Z"
+  }
+}
+```
+
+## Code Examples
+
+### Node.js Example
+
+```javascript
+const axios = require('axios');
+
+class PlaySuperAPI {
+  constructor(apiKey, environment = 'production') {
+    this.apiKey = apiKey;
+    this.baseURL = environment === 'production' 
+      ? 'https://api.playsuper.club/v1'
+      : 'https://api-sandbox.playsuper.club/v1';
+  }
+
+  async request(method, endpoint, data = null) {
+    try {
+      const response = await axios({
+        method,
+        url: `${this.baseURL}${endpoint}`,
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        data
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(`API Error: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  async initializeUser(userId, email, name, metadata = {}) {
+    return this.request('POST', '/users', {
+      userId, email, name, metadata
+    });
+  }
+
+  async distributeCoins(userId, coinId, amount, reason, metadata = {}) {
+    return this.request('POST', '/coins/distribute', {
+      userId, coinId, amount, reason, metadata
+    });
+  }
+
+  async getUserBalance(userId) {
+    return this.request('GET', `/users/${userId}/balance`);
+  }
+
+  async getRewards(filters = {}) {
+    const queryString = new URLSearchParams(filters).toString();
+    return this.request('GET', `/rewards?${queryString}`);
+  }
+
+  async redeemReward(userId, rewardId, quantity = 1) {
+    return this.request('POST', '/rewards/redeem', {
+      userId, rewardId, quantity
+    });
+  }
+}
+
+// Usage
+const playSuper = new PlaySuperAPI(process.env.PLAYSUPER_API_KEY);
+
+// Initialize user
+await playSuper.initializeUser('user123', 'user@example.com', 'John Doe');
+
+// Distribute coins
+await playSuper.distributeCoins('user123', 'GOLD_COIN', 100, 'level_completion');
+
+// Get balance
+const balance = await playSuper.getUserBalance('user123');
+console.log(balance);
+```
+
+### Python Example
+
+```python
+import requests
+import os
+
+class PlaySuperAPI:
+    def __init__(self, api_key, environment='production'):
+        self.api_key = api_key
+        self.base_url = 'https://api.playsuper.club/v1' if environment == 'production' else 'https://api-sandbox.playsuper.club/v1'
+        self.headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+    
+    def request(self, method, endpoint, data=None):
+        url = f"{self.base_url}{endpoint}"
+        response = requests.request(method, url, headers=self.headers, json=data)
+        
+        if response.status_code >= 400:
+            raise Exception(f"API Error: {response.text}")
+        
+        return response.json()
+    
+    def initialize_user(self, user_id, email, name, metadata=None):
+        return self.request('POST', '/users', {
+            'userId': user_id,
+            'email': email,
+            'name': name,
+            'metadata': metadata or {}
+        })
+    
+    def distribute_coins(self, user_id, coin_id, amount, reason, metadata=None):
+        return self.request('POST', '/coins/distribute', {
+            'userId': user_id,
+            'coinId': coin_id,
+            'amount': amount,
+            'reason': reason,
+            'metadata': metadata or {}
+        })
+    
+    def get_user_balance(self, user_id):
+        return self.request('GET', f'/users/{user_id}/balance')
+    
+    def get_rewards(self, filters=None):
+        query_string = '?' + '&'.join([f"{k}={v}" for k, v in (filters or {}).items()])
+        return self.request('GET', f'/rewards{query_string}')
+    
+    def redeem_reward(self, user_id, reward_id, quantity=1):
+        return self.request('POST', '/rewards/redeem', {
+            'userId': user_id,
+            'rewardId': reward_id,
+            'quantity': quantity
+        })
+
+# Usage
+play_super = PlaySuperAPI(os.environ['PLAYSUPER_API_KEY'])
+
+# Initialize user
+play_super.initialize_user('user123', 'user@example.com', 'John Doe')
+
+# Distribute coins
+play_super.distribute_coins('user123', 'GOLD_COIN', 100, 'level_completion')
+
+# Get balance
+balance = play_super.get_user_balance('user123')
+print(balance)
+```
+
+## Error Handling
+
+The API returns standard HTTP status codes and detailed error messages.
+
+### Common Status Codes
+
+- `200` - Success
+- `400` - Bad Request (invalid parameters)
+- `401` - Unauthorized (invalid API key)
+- `403` - Forbidden (insufficient permissions)
+- `404` - Not Found (resource doesn't exist)
+- `429` - Rate Limited
+- `500` - Internal Server Error
+
+### Error Response Format
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_USER_ID",
+    "message": "The provided user ID is invalid",
+    "details": {
+      "userId": "This field is required"
+    }
+  }
+}
+```
+
+## Rate Limiting
+
+The API implements rate limiting to ensure fair usage:
+
+- **Standard Plan:** 1000 requests per hour
+- **Premium Plan:** 10,000 requests per hour
+- **Enterprise Plan:** Custom limits
+
+Rate limit headers are included in responses:
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1641811200
+```
+
+## Webhooks
+
+Set up webhooks to receive real-time notifications about events.
+
+### Supported Events
+
+- `user.created` - New user registered
+- `coins.distributed` - Coins awarded to user
+- `reward.redeemed` - User redeemed a reward
+- `reward.delivered` - Reward delivery completed
+
+### Webhook Configuration
+
+1. Go to PlaySuper Console
+2. Navigate to Webhooks section
+3. Add your endpoint URL
+4. Select events to receive
+5. Configure authentication (optional)
+
+### Webhook Payload Example
+
+```json
+{
+  "event": "reward.redeemed",
+  "timestamp": "2024-01-10T10:30:00Z",
+  "data": {
+    "redemptionId": "redemption_456",
+    "userId": "unique-user-id",
+    "rewardId": "reward_123",
+    "rewardName": "Amazon $10 Gift Card",
+    "quantity": 1,
+    "totalCost": {
+      "coinId": "GOLD_COIN",
+      "amount": 1000
+    }
+  }
+}
+```
+
+## Best Practices
+
+<Callout type="info">
+**API Best Practices:**
+- Implement proper error handling and retry logic
+- Use appropriate timeouts for requests
+- Cache frequently accessed data
+- Monitor your API usage and rate limits
+- Validate all input data before sending requests
+</Callout>
+
+1. **Security**
+   - Store API keys securely
+   - Use HTTPS for all requests
+   - Validate webhook signatures
+   - Implement request timeouts
+
+2. **Performance**
+   - Batch operations when possible
+   - Cache static data (reward catalogs)
+   - Use pagination for large result sets
+   - Monitor response times
+
+3. **Reliability**
+   - Implement retry logic with exponential backoff
+   - Handle rate limits gracefully
+   - Log API responses for debugging
+   - Set up monitoring and alerts
+
+## Testing
+
+Use the sandbox environment for development and testing:
+
+```javascript
+// Development/Testing
+const playSuper = new PlaySuperAPI(
+  process.env.PLAYSUPER_SANDBOX_API_KEY,
+  'sandbox'
+);
+
+// Production
+const playSuper = new PlaySuperAPI(
+  process.env.PLAYSUPER_API_KEY,
+  'production'
+);
+```
+
+## Support
+
+Need help with the API?
+
+- **Email:** [engineering@playsuper.club](mailto:engineering@playsuper.club)
+- **Documentation:** Complete API reference
+- **Status Page:** [status.playsuper.club](https://status.playsuper.club)
+- **Community:** Developer Discord server
+
+## Next Steps
+
+1. **Get Your API Key** - Sign up for PlaySuper Console
+2. **Test Integration** - Try the sandbox environment
+3. **Implement Core Features** - User initialization and coin distribution
+4. **Add Rewards** - Integrate reward redemption
+5. **Go Live** - Switch to production environment
+
+Ready to start building? Head to the [PlaySuper Console](https://console.playsuper.club) to get your API keys!
