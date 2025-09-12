@@ -2,6 +2,18 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
+/* Prevent animations during hydration */
+.js-focus-visible :focus:not(.focus-visible) {
+  outline: none;
+}
+
+html:not(.hydrated) * {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
 :root {
   /* Core brand purples (light mode) */
   --playsuper-purple-50: #faf5ff;
