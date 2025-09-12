@@ -50,12 +50,14 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-x: hidden; /* Only prevent horizontal scroll */
+  overflow-y: visible; /* Let the layout handle scroll */
 }
 
-/* Prevent horizontal overflow globally */
+/* Prevent horizontal overflow globally but let layout handle vertical */
 html {
   overflow-x: hidden;
+  overflow-y: visible;
 }
 
 * {
@@ -68,6 +70,32 @@ html {
   overflow-x: hidden;
 }
 
+/* Fix Fumadocs layout scroll conflicts */
+[data-fd-layout="home"] {
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Prevent nested scroll containers */
+.fd-layout,
+.fd-layout-home,
+.nd-layout {
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+/* Fix main content area */
+main {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+/* Override any flex container heights that might cause scroll */
+.flex.min-h-screen {
+  overflow: visible !important;
+}
+
 /* Responsive fixes for small screens */
 @media (max-width: 640px) {
   .gradient-text {
@@ -78,18 +106,13 @@ html {
     padding: 16px;
     margin: 0;
   }
-  
-  /* Ensure no element exceeds viewport width */
-  * {
-    max-width: 100vw;
-  }
 }
 
-/* Additional overflow prevention */
+/* Additional overflow prevention for hero section */
 .playsuper-hero-bg {
   width: 100%;
-  max-width: 100vw;
   overflow-x: hidden;
+  position: relative;
 }
 
 /* PlaySuper accent utilities */
@@ -177,72 +200,58 @@ html {
 .btn-outline-soft:hover { background: linear-gradient(145deg,hsla(var(--background)/0.95),hsla(var(--background)/0.75)); }
 
 /* Card surface */
-/* Feature Cards */
+/* Feature Cards - Informational Style */
 .playsuper-feature-card {
   background: linear-gradient(
-    135deg, 
+    145deg, 
     rgba(255, 255, 255, 0.1) 0%, 
     rgba(255, 255, 255, 0.05) 100%
   );
-  backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
-  padding: 24px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  min-width: 0; /* Prevent flex item overflow */
-  width: 100%; /* Ensure cards don't exceed container */
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  min-width: 0;
+  width: 100%;
+  cursor: default; /* Remove pointer cursor */
 }
 
-.playsuper-feature-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.5), transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.playsuper-feature-card:hover::before {
-  opacity: 1;
-}
-
+/* Subtle hover effect - not button-like */
 .playsuper-feature-card:hover {
-  transform: translateY(-4px) scale(1.02);
+  transform: translateY(-2px);
   background: linear-gradient(
-    135deg, 
-    rgba(139, 92, 246, 0.15) 0%, 
-    rgba(168, 85, 247, 0.1) 100%
+    145deg, 
+    rgba(139, 92, 246, 0.08) 0%, 
+    rgba(168, 85, 247, 0.05) 100%
   );
-  border-color: rgba(139, 92, 246, 0.3);
+  border-color: rgba(139, 92, 246, 0.2);
   box-shadow: 
-    0 20px 60px rgba(139, 92, 246, 0.2),
-    0 8px 32px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    0 8px 24px rgba(139, 92, 246, 0.1),
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .playsuper-feature-card h3 {
   color: var(--fd-foreground);
-  font-weight: 700;
-  font-size: 1.25rem;
+  font-weight: 600;
+  font-size: 1rem;
   margin-bottom: 8px;
   transition: color 0.3s ease;
 }
 
 .playsuper-feature-card:hover h3 {
-  color: var(--fd-primary);
+  color: hsl(var(--primary));
 }
 
 .playsuper-feature-card p {
   color: var(--fd-muted-foreground);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   line-height: 1.5;
   margin: 0;
 }
