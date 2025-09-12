@@ -1,33 +1,60 @@
-import { LayoutProps } from '@/.next/types/app/layout';
-import '@/app/global.css';
-import { RootProvider } from 'fumadocs-ui/provider';
-import { Inter } from 'next/font/google';
-import { Metadata } from 'next';
+import { DocsLayout } from 'fumadocs-ui/layouts/docs'
+import { source } from '@/lib/source'
+import { Providers } from '@/lib/providers'
+import { baseOptions } from '@/lib/layout.shared'
+import { Inter } from 'next/font/google'
+import type { Metadata } from 'next'
+import 'fumadocs-ui/style.css'
+import './global.css'
 
 const inter = Inter({
   subsets: ['latin'],
-});
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: 'PlaySuper Docs',
-  description: 'Documentation for PlaySuper - Boost retention with real rewards',
-  icons: {
-    icon: '/ps-logo.png',
-    shortcut: '/ps-logo.png',
-    apple: '/ps-logo.png',
+  title: {
+    default: 'PlaySuper Documentation',
+    template: '%s | PlaySuper',
   },
-};
+  description: 'Complete integration guide and API documentation for PlaySuper rewards platform',
+  icons: {
+    icon: '/favicon.png',
+  },
+}
 
-export default function Layout({ children }: LayoutProps) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en" className={inter.className} suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/ps-logo.png" />
-        <link rel="apple-touch-icon" href="/ps-logo.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                function markHydrated() {
+                  document.documentElement.classList.add('hydrated');
+                }
+                if (document.readyState === 'loading') {
+                  document.addEventListener('DOMContentLoaded', markHydrated);
+                } else {
+                  markHydrated();
+                }
+              })();
+            `,
+          }}
+        />
       </head>
-      <body className="flex min-h-screen flex-col">
-        <RootProvider>{children}</RootProvider>
+      <body className="antialiased">
+        <Providers>
+          <DocsLayout tree={source.pageTree} {...baseOptions()}>
+            {children}
+          </DocsLayout>
+        </Providers>
       </body>
     </html>
-  );
+  )
 }

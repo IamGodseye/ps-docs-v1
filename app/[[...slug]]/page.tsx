@@ -9,7 +9,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { getMDXComponents } from '@/mdx-components';
-import { PageProps } from '@/.next/types/app/docs/[[...slug]]/page';
+import { PageProps } from '@/.next/types/app/[[...slug]]/page';
 
 export default async function Page(props: PageProps) {
   const params = await props.params;
