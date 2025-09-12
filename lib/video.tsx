@@ -26,6 +26,19 @@ export function Video({
   controls = true,
   className = "",
 }: VideoProps) {
+  // Create video props object to ensure consistent serialization
+  const videoProps = {
+    width,
+    height,
+    controls,
+    muted,
+    poster,
+    className: "w-full h-auto",
+    preload: "metadata" as const,
+    playsInline: true,
+    ...(autoplay && muted ? { autoPlay: true } : {}), // Only autoplay if muted
+  };
+
   return (
     <div className={`my-6 ${className}`}>
       {title && (
@@ -39,17 +52,7 @@ export function Video({
         </p>
       )}
       <div className="relative rounded-lg overflow-hidden border border-fd-border bg-fd-card shadow-sm">
-        <video
-          width={width}
-          height={height}
-          controls={controls}
-          autoPlay={autoplay}
-          muted={muted}
-          poster={poster}
-          className="w-full h-auto"
-          preload="metadata"
-          playsInline
-        >
+        <video {...videoProps}>
           <source src={src} type="video/mp4" />
           <p className="text-fd-muted-foreground p-4">
             Your browser does not support the video tag. 
@@ -58,10 +61,6 @@ export function Video({
             </a>
           </p>
         </video>
-        {/* Optional: Add loading overlay */}
-        <div className="absolute inset-0 bg-fd-muted/20 flex items-center justify-center opacity-0 transition-opacity duration-300 pointer-events-none">
-          <div className="w-8 h-8 border-2 border-fd-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
       </div>
     </div>
   );

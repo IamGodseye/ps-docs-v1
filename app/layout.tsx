@@ -1,6 +1,7 @@
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 import { source } from '@/lib/source'
 import { Providers } from '@/lib/providers'
+import { baseOptions } from '@/lib/layout.shared'
 import { Inter } from 'next/font/google'
 import type { Metadata } from 'next'
 import 'fumadocs-ui/style.css'
@@ -28,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={inter.className}>
+    <html lang="en" className={inter.className} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -49,7 +50,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <Providers>
-          <DocsLayout tree={source.pageTree}>
+          <DocsLayout tree={source.pageTree} {...baseOptions()}>
             {children}
           </DocsLayout>
         </Providers>
