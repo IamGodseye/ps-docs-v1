@@ -5,7 +5,7 @@ export default function HomePage() {
     <main className="min-h-screen playsuper-hero-bg">
       <div className="relative">
         <div className="absolute inset-x-0 top-0 h-72 pointer-events-none opacity-40" style={{background:"linear-gradient(to bottom,rgba(168,85,247,0.35),transparent)"}} />
-        <div className="container mx-auto px-4 pt-28 pb-10 relative">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-10 relative max-w-7xl">
           <div className="text-center max-w-5xl mx-auto">
             <div className="inline-flex items-center px-4 py-2 rounded-full btn-outline-soft shadow-sm mb-8">
               <span className="text-sm font-medium tracking-wide text-fd-muted-foreground">
@@ -31,7 +31,7 @@ export default function HomePage() {
           </div>
 
           {/* Value Pillars */}
-          <div className="grid md:grid-cols-5 gap-6 mb-28">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-28 max-w-7xl mx-auto">
             {[
               { title:'Seamless Integration', copy:'One-time SDK / iframe drop-in. All rewards, coins & fulfillment handled.' },
               { title:'Enhanced Retention', copy:'Meaningful real-world value keeps players returning & session length growing.' },
