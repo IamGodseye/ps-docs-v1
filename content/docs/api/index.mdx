@@ -189,6 +189,12 @@ GET /rewards
 
 ### 🔍 Filtering Rewards
 
+<Callout type="info">
+For static coupon rewards that are valid until stock lasts from the brand's end:
+- `campaignCoverImage` will be optional
+- `endDate` will be optional (these rewards remain live until stock lasts)
+</Callout>
+
 The `/rewards` endpoint supports powerful filtering options to help you customize the rewards experience:
 
 ```bash
